@@ -6,6 +6,7 @@ import (
 	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/cypher-org/cypher/plugins"
 	"github.com/joho/godotenv"
 )
 
@@ -18,19 +19,23 @@ func main() {
 		token = test_token
 	}
 
-	discord, err := discordgo.New("Bot " + token)
+	session, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatalf("Error occured during inititalization: %v", err)
 		os.Exit(1)
 	}
 
-	err = discord.Open()
+	session.AddHandler(plugins.Handler)
+
+	err = session.Open()
 	if err != nil {
 		log.Fatalf("Error while opening a websocket connection: %v", err)
 		os.Exit(1)
 	}
 
-	defer discord.Close()
+	defer session.Close()
+
+	plugins.ApplyCommands(session)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
